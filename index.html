@@ -1,0 +1,94 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>年终奖查询</title>  
+    <style>  
+        body {  
+            font-family: Arial, sans-serif;  
+            background-color: #f4f4f4;  
+            margin: 0;  
+            padding: 20px;  
+        }  
+        h1 {  
+            color: #333;  
+            text-align: center;  
+        }  
+        form {  
+            max-width: 400px;  
+            margin: 0 auto;  
+            padding: 20px;  
+            background-color: #fff;  
+            border-radius: 8px;  
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);  
+        }  
+        label {  
+            display: block;  
+            margin-bottom: 8px;  
+            font-weight: bold;  
+        }  
+        input[type="text"] {  
+            width: 100%;  
+            padding: 10px;  
+            margin-bottom: 10px;  
+            border: 1px solid #ccc;  
+            border-radius: 4px;  
+        }  
+        button {  
+            width: 100%;  
+            padding: 10px;  
+            background-color: #28a745;  
+            color: #fff;  
+            border: none;  
+            border-radius: 4px;  
+            cursor: pointer;  
+            font-size: 16px;  
+        }  
+        button:hover {  
+            background-color: #218838;  
+        }  
+        #result {  
+            margin-top: 20px;  
+            text-align: center;  
+            font-size: 18px;  
+            color: #333;  
+        }  
+    </style>  
+</head>  
+<body>  
+    <h1>年终奖查询</h1>  
+    <form id="searchForm">  
+        <label for="name">姓名:</label>  
+        <input type="text" id="name" name="name" placeholder="请输入姓名">  
+        <button type="submit">查询</button>  
+    </form>  
+    <p id="result"></p>  
+  
+    <script>  
+        document.getElementById('searchForm').addEventListener('submit', function(event) {  
+            event.preventDefault();  
+            const name = document.getElementById('name').value;  
+              
+            // 假设你有一个名为 data.json 的文件与这个 HTML 文件在同一目录下  
+            fetch('data.json')  
+                .then(response => response.json())  
+                .then(data => {  
+                    const employee = data.find(emp => emp.name === name);  
+                    if (employee) {  
+                        document.getElementById('result').innerText = `姓名: ${employee.name}, 年终奖: ${employee.bonus} 元`;  
+                        document.getElementById('result').style.color = '#28a745'; // 设置成功查询的颜色  
+                    } else {  
+                        document.getElementById('result').innerText = '未找到该员工的年终奖信息';  
+                        document.getElementById('result').style.color = '#dc3545'; // 设置未找到的颜色  
+                    }  
+                })  
+                .catch(error => {  
+                    console.error('Error fetching data:', error);  
+                    document.getElementById('result').innerText = '无法查询年终奖信息，请稍后再试';  
+                    document.getElementById('result').style.color = '#dc3545'; // 设置错误的颜色  
+                });  
+        });  
+    </script>  
+</body>  
+</html>
