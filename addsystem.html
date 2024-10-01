@@ -3,131 +3,139 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>Data Entry, Modification, and Download</title>  
+    <title>Data Entry, Modification, and Deletion</title>  
     <style>  
         body {  
             font-family: Arial, sans-serif;  
             margin: 20px;  
-            padding: 20px;  
-            background-color: #f9f9f9;  
-        }  
-        .container {  
-            max-width: 600px;  
-            margin: 0 auto;  
-            background: #fff;  
-            padding: 20px;  
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);  
-        }  
-        h1 {  
-            text-align: center;  
         }  
         form {  
-            display: flex;  
-            flex-direction: column;  
+            max-width: 400px;  
+            margin: 0 auto;  
         }  
         label {  
+            display: block;  
             margin-top: 10px;  
-            margin-bottom: 5px;  
         }  
         input, button {  
-            margin-top: 10px;  
-            padding: 10px;  
-            font-size: 16px;  
+            width: 100%;  
+            padding: 8px;  
+            margin-top: 5px;  
         }  
-        button {  
-            cursor: pointer;  
-            background-color: #007bff;  
-            color: #fff;  
-            border: none;  
+        .data-list {  
+            margin-top: 20px;  
+        }  
+        .data-item {  
+            border: 1px solid #ccc;  
+            padding: 10px;  
+            margin-bottom: 10px;  
             border-radius: 5px;  
         }  
-        button:hover {  
-            background-color: #0056b3;  
-        }  
-        .file-input {  
-            margin-top: 20px;  
+        .data-item button {  
+            width: auto;  
+            margin-right: 5px;  
         }  
     </style>  
 </head>  
 <body>  
-    <div class="container">  
-        <h1>Data Entry, Modification, and Download</h1>  
-        <form id="dataForm">  
-            <label for="name">Name:</label>  
-            <input type="text" id="name" name="name" required>  
-            <label for="salary">Salary:</label>  
-            <input type="number" id="salary" name="salary" step="0.01" required>  
-            <button type="button" onclick="addData()">Add Data</button>  
-            <div class="file-input">  
-                <label for="fileUpload">Upload JSON File:</label>  
-                <input type="file" id="fileUpload" accept=".json" onchange="loadJSON(event)">  
-            </div>  
-        </form>  
-        <button type="button" onclick="downloadData()">Download JSON</button>  
-        <pre id="dataPreview" style="white-space: pre-wrap; word-wrap: break-word; max-height: 200px; overflow-y: auto; margin-top: 20px; background: #f5f5f5; padding: 10px;"></pre>  
+    <h1>Data Entry, Modification, and Deletion</h1>  
+    <form id="dataForm">  
+        <label for="name">Name:</label>  
+        <input type="text" id="name" name="name" required>  
+        <label for="salary">Salary:</label>  
+        <input type="number" id="salary" name="salary" required>  
+        <button type="button" onclick="addOrUpdateData()">Submit</button>  
+    </form>  
+  
+    <div class="data-list" id="dataList">  
+        <!-- Data items will be dynamically inserted here -->  
     </div>  
   
     <script>  
-        let dataArray = [];  
+        // Function to get data from localStorage or initialize it if not present  
+        function getData() {  
+            const jsonString = localStorage.getItem('data');  
+            return jsonString ? JSON.parse(jsonString) : [];  
+        }  
   
-        function addData() {  
+        // Function to save data to localStorage  
+        function saveData(data) {  
+            localStorage.setItem('data', JSON.stringify(data));  
+        }  
+  
+        // Function to add or update data  
+        function addOrUpdateData() {  
             const name = document.getElementById('name').value;  
-            const salary = parseFloat(document.getElementById('salary').value);  
-              
-            if (name && !isNaN(salary)) {  
-                dataArray.push({ name, salary });  
-                updatePreview();  
-                  
-                // 清空输入框  
-                document.getElementById('dataForm').reset();  
+            const salary = document.getElementById('salary').value;  
+            const data = getData();  
+  
+            let existingItem = data.find(item => item.name === name);  
+            if (existingItem) {  
+                // Update existing item  
+                existingItem.salary = parseInt(salary, 10);  
             } else {  
-                alert('Please fill in all fields correctly.');  
+                // Add new item  
+                data.push({ name, salary: parseInt(salary, 10) });  
+            }  
+  
+            saveData(data);  
+            renderDataList();  
+  
+            // Clear the form  
+            document.getElementById('dataForm').reset();  
+        }  
+  
+        // Function to delete data by name  
+        function deleteDataByName(name) {  
+            const data = getData();  
+            data.splice(data.findIndex(item => item.name === name), 1);  
+            saveData(data);  
+            renderDataList();  
+        }  
+  
+        // Function to render the data list  
+        function renderDataList() {  
+            const dataList = document.getElementById('dataList');  
+            dataList.innerHTML = ''; // Clear existing items  
+  
+            const data = getData();  
+            data.forEach(item => {  
+                const div = document.createElement('div');  
+                div.className = 'data-item';  
+  
+                div.innerHTML = `  
+                    <span>${item.name}: ${item.salary}</span>  
+                    <button onclick="deleteDataByName('${item.name}')">Delete</button>  
+                    <button onclick="editDataByName('${item.name}')">Edit</button>  
+                `;  
+  
+                dataList.appendChild(div);  
+            });  
+        }  
+  
+        // Function to edit data (not fully implemented in UI for simplicity,   
+        // but you can call this function from an edit button's onclick event)  
+        function editDataByName(name) {  
+            const data = getData();  
+            const item = data.find(item => item.name === name);  
+            if (item) {  
+                // Pre-fill the form with the item's data  
+                document.getElementById('name').value = item.name;  
+                document.getElementById('salary').value = item.salary;  
+  
+                // Here you would typically show a modal or some way to distinguish   
+                // that the form is now in edit mode, but for simplicity we'll skip that.  
+                // Instead, we'll just log the item to the console.  
+                console.log('Editing item:', item);  
+  
+                // Note: In a real implementation, you would handle the form submission   
+                // differently when in edit mode, possibly by checking a flag or using   
+                // a different button/function to update the item rather than adding a new one.  
             }  
         }  
   
-        function loadJSON(event) {  
-            const file = event.target.files[0];  
-            if (file) {  
-                const reader = new FileReader();  
-                reader.onload = function(e) {  
-                    try {  
-                        const jsonData = JSON.parse(e.target.result);  
-                        if (Array.isArray(jsonData)) {  
-                            dataArray = jsonData;  
-                            updatePreview();  
-                        } else {  
-                            alert('Uploaded file is not a valid JSON array.');  
-                        }  
-                    } catch (error) {  
-                        alert('Error parsing JSON file: ' + error.message);  
-                    }  
-                };  
-                reader.readAsText(file);  
-            }  
-        }  
-  
-        function downloadData() {  
-            const jsonString = JSON.stringify(dataArray, null, 2);  
-            const blob = new Blob([jsonString], { type: 'application/json' });  
-            const url = URL.createObjectURL(blob);  
-              
-            const a = document.createElement('a');  
-            a.href = url;  
-            a.download = 'data.json';  
-            document.body.appendChild(a);  
-            a.click();  
-              
-            document.body.removeChild(a);  
-            URL.revokeObjectURL(url);  
-        }  
-  
-        function updatePreview() {  
-            const previewElement = document.getElementById('dataPreview');  
-            previewElement.textContent = JSON.stringify(dataArray, null, 2);  
-        }  
-  
-        // 初始化时更新预览（可选）  
-        updatePreview();  
+        // Initialize the data list when the page loads  
+        window.onload = renderDataList;  
     </script>  
 </body>  
 </html>
