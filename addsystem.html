@@ -3,139 +3,183 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>Data Entry, Modification, and Deletion</title>  
+    <title>Local JSON Data Manager</title>  
     <style>  
         body {  
             font-family: Arial, sans-serif;  
             margin: 20px;  
+            padding: 20px;  
+            background-color: #f4f4f4;  
         }  
-        form {  
-            max-width: 400px;  
+        .container {  
+            max-width: 600px;  
             margin: 0 auto;  
+            background: #fff;  
+            padding: 20px;  
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);  
         }  
-        label {  
+        h1 {  
+            text-align: center;  
+        }  
+        .form-group {  
+            margin-bottom: 15px;  
+        }  
+        .form-group label {  
             display: block;  
-            margin-top: 10px;  
+            margin-bottom: 5px;  
         }  
-        input, button {  
+        .form-group input {  
             width: 100%;  
             padding: 8px;  
-            margin-top: 5px;  
+            box-sizing: border-box;  
+        }  
+        .button-group {  
+            margin-top: 20px;  
+        }  
+        .button-group button {  
+            width: 48%;  
+            padding: 10px;  
+            margin: 1%;  
+            box-sizing: border-box;  
         }  
         .data-list {  
             margin-top: 20px;  
         }  
         .data-item {  
-            border: 1px solid #ccc;  
-            padding: 10px;  
-            margin-bottom: 10px;  
-            border-radius: 5px;  
+            border-bottom: 1px solid #ddd;  
+            padding: 10px 0;  
         }  
-        .data-item button {  
-            width: auto;  
-            margin-right: 5px;  
+        .data-item:last-child {  
+            border-bottom: none;  
+        }  
+        .data-item span {  
+            display: inline-block;  
+            width: 48%;  
+            box-sizing: border-box;  
         }  
     </style>  
 </head>  
 <body>  
-    <h1>Data Entry, Modification, and Deletion</h1>  
-    <form id="dataForm">  
-        <label for="name">Name:</label>  
-        <input type="text" id="name" name="name" required>  
-        <label for="salary">Salary:</label>  
-        <input type="number" id="salary" name="salary" required>  
-        <button type="button" onclick="addOrUpdateData()">Submit</button>  
-    </form>  
-  
-    <div class="data-list" id="dataList">  
-        <!-- Data items will be dynamically inserted here -->  
+    <div class="container">  
+        <h1>Local JSON Data Manager</h1>  
+        <form id="dataForm" class="form-group">  
+            <label for="name">Name:</label>  
+            <input type="text" id="name" name="name" required>  
+            <label for="salary">Salary:</label>  
+            <input type="number" id="salary" name="salary" step="0.01" required>  
+            <div class="button-group">  
+                <button type="button" onclick="addOrUpdateData()">Add/Update Data</button>  
+                <button type="button" onclick="deleteData()">Delete Data by Name</button>  
+                <button type="button" onclick="downloadData()">Download JSON</button>  
+            </div>  
+        </form>  
+        <div class="data-list" id="dataList">  
+            <!-- Data items will be inserted here by JavaScript -->  
+        </div>  
     </div>  
   
     <script>  
-        // Function to get data from localStorage or initialize it if not present  
-        function getData() {  
-            const jsonString = localStorage.getItem('data');  
-            return jsonString ? JSON.parse(jsonString) : [];  
-        }  
-  
-        // Function to save data to localStorage  
-        function saveData(data) {  
-            localStorage.setItem('data', JSON.stringify(data));  
-        }  
+        // Load data from localStorage  
+        let dataArray = JSON.parse(localStorage.getItem('dataArray')) || [];  
   
         // Function to add or update data  
         function addOrUpdateData() {  
-            const name = document.getElementById('name').value;  
-            const salary = document.getElementById('salary').value;  
-            const data = getData();  
+            const name = document.getElementById('name').value.trim();  
+            const salary = parseFloat(document.getElementById('salary').value);  
   
-            let existingItem = data.find(item => item.name === name);  
-            if (existingItem) {  
-                // Update existing item  
-                existingItem.salary = parseInt(salary, 10);  
+            if (name && !isNaN(salary)) {  
+                let existingIndex = dataArray.findIndex(item => item.name === name);  
+                if (existingIndex !== -1) {  
+                    // Update existing data  
+                    dataArray[existingIndex] = { name, salary };  
+                } else {  
+                    // Add new data  
+                    dataArray.push({ name, salary });  
+                }  
+  
+                // Save data to localStorage  
+                localStorage.setItem('dataArray', JSON.stringify(dataArray));  
+  
+                // Update displayed data  
+                renderDataList();  
+  
+                // Clear form  
+                document.getElementById('dataForm').reset();  
             } else {  
-                // Add new item  
-                data.push({ name, salary: parseInt(salary, 10) });  
+                alert('Please fill in all fields correctly.');  
             }  
-  
-            saveData(data);  
-            renderDataList();  
-  
-            // Clear the form  
-            document.getElementById('dataForm').reset();  
         }  
   
         // Function to delete data by name  
-        function deleteDataByName(name) {  
-            const data = getData();  
-            data.splice(data.findIndex(item => item.name === name), 1);  
-            saveData(data);  
-            renderDataList();  
+        function deleteData() {  
+            const name = document.getElementById('name').value.trim();  
+            if (name) {  
+                dataArray = dataArray.filter(item => item.name !== name);  
+  
+                // Save data to localStorage  
+                localStorage.setItem('dataArray', JSON.stringify(dataArray));  
+  
+                // Update displayed data  
+                renderDataList();  
+  
+                // Clear salary field (optional, for UX)  
+                document.getElementById('salary').value = '';  
+            } else {  
+                alert('Please enter a name to delete.');  
+            }  
         }  
   
-        // Function to render the data list  
+        // Function to download data as JSON  
+        function downloadData() {  
+            const jsonString = JSON.stringify(dataArray, null, 2);  
+            const blob = new Blob([jsonString], { type: 'application/json' });  
+            const url = URL.createObjectURL(blob);  
+  
+            const a = document.createElement('a');  
+            a.href = url;  
+            a.download = 'data.json';  
+            document.body.appendChild(a);  
+            a.click();  
+  
+            document.body.removeChild(a);  
+            URL.revokeObjectURL(url);  
+        }  
+  
+        // Function to render data list in the HTML  
         function renderDataList() {  
             const dataList = document.getElementById('dataList');  
-            dataList.innerHTML = ''; // Clear existing items  
+            dataList.innerHTML = ''; // Clear existing data  
   
-            const data = getData();  
-            data.forEach(item => {  
+            dataArray.forEach((item, index) => {  
                 const div = document.createElement('div');  
                 div.className = 'data-item';  
   
-                div.innerHTML = `  
-                    <span>${item.name}: ${item.salary}</span>  
-                    <button onclick="deleteDataByName('${item.name}')">Delete</button>  
-                    <button onclick="editDataByName('${item.name}')">Edit</button>  
-                `;  
+                const nameSpan = document.createElement('span');  
+                nameSpan.textContent = `Name: ${item.name}`;  
+                div.appendChild(nameSpan);  
+  
+                const salarySpan = document.createElement('span');  
+                salarySpan.textContent = `Salary: ${item.salary.toFixed(2)}`;  
+                div.appendChild(salarySpan);  
+  
+                // Optionally, add a delete button for each item  
+                /*  
+                const deleteButton = document.createElement('button');  
+                deleteButton.textContent = 'Delete';  
+                deleteButton.onclick = () => {  
+                    dataArray.splice(index, 1);  
+                    localStorage.setItem('dataArray', JSON.stringify(dataArray));  
+                    renderDataList();  
+                };  
+                div.appendChild(deleteButton);  
+                */  
   
                 dataList.appendChild(div);  
             });  
         }  
   
-        // Function to edit data (not fully implemented in UI for simplicity,   
-        // but you can call this function from an edit button's onclick event)  
-        function editDataByName(name) {  
-            const data = getData();  
-            const item = data.find(item => item.name === name);  
-            if (item) {  
-                // Pre-fill the form with the item's data  
-                document.getElementById('name').value = item.name;  
-                document.getElementById('salary').value = item.salary;  
-  
-                // Here you would typically show a modal or some way to distinguish   
-                // that the form is now in edit mode, but for simplicity we'll skip that.  
-                // Instead, we'll just log the item to the console.  
-                console.log('Editing item:', item);  
-  
-                // Note: In a real implementation, you would handle the form submission   
-                // differently when in edit mode, possibly by checking a flag or using   
-                // a different button/function to update the item rather than adding a new one.  
-            }  
-        }  
-  
-        // Initialize the data list when the page loads  
-        window.onload = renderDataList;  
+        // Initial render of data list  
+        renderDataList();  
     </script>  
 </body>  
 </html>
