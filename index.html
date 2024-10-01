@@ -3,7 +3,7 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>年终奖查询</title>  
+    <title>工资查询 By AllowC</title>  
     <style>  
         body {  
             font-family: Arial, sans-serif;  
@@ -57,7 +57,7 @@
     </style>  
 </head>  
 <body>  
-    <h1>年终奖查询</h1>  
+    <h1>工资查询</h1>  
     <form id="searchForm">  
         <label for="name">姓名:</label>  
         <input type="text" id="name" name="name" placeholder="请输入姓名">  
@@ -76,16 +76,16 @@
                 .then(data => {  
                     const employee = data.find(emp => emp.name === name);  
                     if (employee) {  
-                        document.getElementById('result').innerText = `姓名: ${employee.name}, 年终奖: ${employee.bonus} 元`;  
+                        document.getElementById('result').innerText = `姓名: ${employee.name}, 工资: ${employee.salary} 元`;  
                         document.getElementById('result').style.color = '#28a745'; // 设置成功查询的颜色  
                     } else {  
-                        document.getElementById('result').innerText = '未找到该员工的年终奖信息';  
+                        document.getElementById('result').innerText = '未找到该人的工资信息';  
                         document.getElementById('result').style.color = '#dc3545'; // 设置未找到的颜色  
                     }  
                 })  
                 .catch(error => {  
                     console.error('Error fetching data:', error);  
-                    document.getElementById('result').innerText = '无法查询年终奖信息，请稍后再试';  
+                    document.getElementById('result').innerText = '无法查询工资信息，请稍后再试';  
                     document.getElementById('result').style.color = '#dc3545'; // 设置错误的颜色  
                 });  
         });  
